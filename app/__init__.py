@@ -46,7 +46,7 @@ def create_app():
     from .routes.cards import cards
     from .routes.transactions import transactions
     from .routes.profile import profile_bp
-    from .routes.calculator import calculator_bp
+
 
     app.register_blueprint(auth)
     app.register_blueprint(dashboard)
@@ -55,7 +55,7 @@ def create_app():
     app.register_blueprint(cards)
     app.register_blueprint(transactions)
     app.register_blueprint(profile_bp)
-    app.register_blueprint(calculator_bp)
+
 
     with app.app_context():
         db.create_all()
