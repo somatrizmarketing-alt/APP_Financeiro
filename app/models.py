@@ -38,6 +38,7 @@ class Goal(db.Model):
 class Investment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
+    symbol = db.Column(db.String(20))
     name = db.Column(db.String(100))  # ex: PETR4
     type = db.Column(db.String(50))   # ação, cripto
 
