@@ -46,5 +46,3 @@ def delete(id):
     db.session.commit()
 
     return redirect(url_for('transactions.index'))
-
-    return redirect(url_for('transactions.index'))
