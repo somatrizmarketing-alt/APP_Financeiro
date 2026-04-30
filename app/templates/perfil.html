@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block content %}
+
+<style>
+  :root {
+    --bg: #080d18;
+    --surface: #0f1623;
+    --surface2: #161f30;
+    --surface3: #1c2840;
+    --border: rgba(255,255,255,0.06);
+    --accent: #00e5a0;
+    --accent2: #00b4d8;
+    --danger: #f87171;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --muted2: #8892a4;
+  }
+
+  .profile-wrap {
+    position: relative; z-index: 1;
+    max-width: 720px; margin: 0 auto;
+    padding: 40px 32px 60px;
+  }
+
+  .profile-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .profile-blob { position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.08; }
+  .profile-blob-1 { width: 500px; height: 500px; background: var(--accent2); top: -120px; right: -80px; }
+  .profile-blob-2 { width: 400px; height: 400px; background: #7c3aed; bottom: -80px; left: -60px; }
+
+  /* ── HEADER ── */
+  .profile-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 32px;
+    animation: fadeUp .5s ease both;
+  }
+  .profile-page-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 2rem; letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text) 40%, var(--muted2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  /* ── AVATAR CARD ── */
+  .avatar-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 28px;
+    display: flex; align-items: center; gap: 24px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .05s both;
+    position: relative; overflow: hidden;
+  }
+  .avatar-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 18px 18px 0 0;
+    background: linear-gradient(90deg, var(--accent2), var(--accent), transparent);
+  }
+
+  .avatar-circle {
+    width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.6rem;
+    color: #080d18;
+    box-shadow: 0 0 0 4px rgba(0,229,160,0.15);
+  }
+
+  .avatar-info { flex: 1; min-width: 0; }
+  .avatar-name {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.25rem; letter-spacing: -0.02em;
+    color: var(--text); margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .avatar-email { font-size: .875rem; color: var(--muted2); }
+
+  .avatar-badge {
+    font-size: .72rem; font-weight: 700; font-family: 'Syne', sans-serif;
+    padding: 4px 12px; border-radius: 99px;
+    background: rgba(0,229,160,0.1); color: var(--accent);
+    border: 1px solid rgba(0,229,160,0.2);
+    white-space: nowrap;
+  }
+
+  /* ── INFO CARD ── */
+  .info-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px 28px;
+    margin-bottom: 20px;
+    animation: fadeUp .5s ease .1s both;
+  }
+  .card-section-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    color: var(--text);
+  }
+
+  .info-row {
+    display: flex; align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .info-row:first-of-type { padding-top: 0; }
+  .info-key {
+    font-size: .75rem; font-weight: 500; text-transform: uppercase;
+    letter-spacing: .09em; color: var(--muted2);
+    width: 120px; flex-shrink: 0;
+  }
+  .info-val { font-size: .92rem; color: var(--text); font-weight: 500; }
+
+  /* ── PASSWORD CARD ── */
+  .pw-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 26px 28px;
+    animation: fadeUp .5s ease .15s both;
+  }
+
+  .form-field { margin-bottom: 16px; }
+  .form-field label {
+    display: block; font-size: .72rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted2); margin-bottom: 7px;
+  }
+  .input-wrap { position: relative; }
+  .input-wrap input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 42px 12px 14px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .input-wrap input::placeholder { color: var(--muted); }
+  .input-wrap input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+    background: rgba(0,229,160,0.03);
+  }
+  .toggle-pw {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 15px; transition: color .2s; padding: 0;
+  }
+  .toggle-pw:hover { color: var(--text); }
+
+  /* strength bar */
+  .strength-wrap { margin-top: 8px; display: none; }
+  .strength-wrap.visible { display: block; }
+  .strength-bar { height: 3px; background: var(--surface3); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+  .strength-fill { height: 100%; border-radius: 99px; width: 0; transition: width .4s ease, background .4s ease; }
+  .strength-label { font-size: .73rem; color: var(--muted); }
+
+  .flash {
+    padding: 12px 16px; border-radius: 10px;
+    font-size: .85rem; margin-bottom: 18px; animation: fadeIn .3s ease;
+  }
+  .flash.success { background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.2); color: var(--accent); }
+  .flash.error   { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--danger); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .btn-pw {
+    width: 100%; padding: 13px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 12px;
+    color: #080d18; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem;
+    cursor: pointer; margin-top: 4px;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(0,229,160,0.2);
+  }
+  .btn-pw:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,229,160,0.3); }
+  .btn-pw:active { transform: translateY(0); }
+
+  /* danger zone */
+  .danger-card {
+    background: var(--surface); border: 1px solid rgba(248,113,113,0.15);
+    border-radius: 18px; padding: 22px 28px;
+    margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    animation: fadeUp .5s ease .2s both;
+  }
+  .danger-info .danger-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+    color: var(--danger); margin-bottom: 4px;
+  }
+  .danger-info .danger-desc { font-size: .8rem; color: var(--muted2); }
+  .btn-danger {
+    padding: 9px 20px;
+    background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 10px; color: var(--danger);
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+    cursor: pointer; white-space: nowrap;
+    transition: background .2s, box-shadow .2s;
+  }
+  .btn-danger:hover { background: rgba(248,113,113,0.18); box-shadow: 0 4px 16px rgba(248,113,113,0.15); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 600px) {
+    .avatar-card { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .danger-card { flex-direction: column; align-items: flex-start; }
+    .profile-wrap { padding: 24px 16px 48px; }
+  }
+</style>
+
+<div class="profile-bg">
+  <div class="profile-blob profile-blob-1"></div>
+  <div class="profile-blob profile-blob-2"></div>
+</div>
+
+<div class="profile-wrap">
+
+  <!-- Header -->
+  <div class="profile-header">
+    <h1 class="profile-page-title">Meu Perfil</h1>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="flash {{ category }}">{{ '✓' if category == 'success' else '⚠' }} {{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Avatar card -->
+  <div class="avatar-card">
+    <div class="avatar-circle">{{ user.name[0] | upper }}</div>
+    <div class="avatar-info">
+      <div class="avatar-name">{{ user.name }}</div>
+      <div class="avatar-email">{{ user.email }}</div>
+    </div>
+    <span class="avatar-badge">✓ Conta ativa</span>
+  </div>
+
+  <!-- Info card -->
+  <div class="info-card">
+    <div class="card-section-title">👤 Informações</div>
+    <div class="info-row">
+      <span class="info-key">Nome</span>
+      <span class="info-val">{{ user.name }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">E-mail</span>
+      <span class="info-val">{{ user.email }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Membro desde</span>
+      <span class="info-val">{{ user.created_at.strftime('%d/%m/%Y') if user.created_at is defined else '—' }}</span>
+    </div>
+  </div>
+
+  <!-- Password card -->
+  <div class="pw-card">
+    <div class="card-section-title">🔒 Alterar Senha</div>
+
+    <form method="POST" action="{{ url_for('profile.alterar_senha') }}">
+
+      <div class="form-field">
+        <label>Senha atual</label>
+        <div class="input-wrap">
+          <input type="password" name="senha_atual" id="pw-atual" placeholder="••••••••" required />
+          <button type="button" class="toggle-pw" onclick="togglePw('pw-atual', this)">👁</button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Nova senha</label>
+        <div class="input-wrap">
+          <input type="password" name="nova_senha" id="pw-nova" placeholder="Mínimo 8 caracteres"
+                 oninput="checkStrength(this.value)" required />
+          <button type="button" class="toggle-pw" onclick="togglePw('pw-nova', this)">👁</button>
+        </div>
+        <div class="strength-wrap" id="strengthWrap">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <span class="strength-label" id="strengthLabel"></span>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:22px">
+        <label>Confirmar nova senha</label>
+        <div class="input-wrap">
+          <input type="password" name="confirmar_senha" id="pw-confirm" placeholder="Repita a nova senha"
+                 oninput="checkMatch()" required />
+          <button type="button" class="toggle-pw" onclick="togglePw('pw-confirm', this)">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-pw">Salvar nova senha</button>
+    </form>
+  </div>
+
+  <!-- Danger zone -->
+  <div class="danger-card">
+    <div class="danger-info">
+      <div class="danger-title">Excluir conta</div>
+      <div class="danger-desc">Esta ação é permanente e não pode ser desfeita.</div>
+    </div>
+    <button class="btn-danger" onclick="confirm('Tem certeza? Esta ação é irreversível.') && window.location.assign('{{ url_for('profile.delete_account') if 'profile.delete_account' in [] else '#' }}')">
+      Excluir conta
+    </button>
+  </div>
+
+</div>
+
+<script>
+  function togglePw(id, btn) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+    btn.textContent = input.type === 'password' ? '👁' : '🙈';
+  }
+
+  function checkStrength(val) {
+    const wrap  = document.getElementById('strengthWrap');
+    const fill  = document.getElementById('strengthFill');
+    const label = document.getElementById('strengthLabel');
+    if (!val) { wrap.classList.remove('visible'); return; }
+    wrap.classList.add('visible');
+    let score = 0;
+    if (val.length >= 8)        score++;
+    if (/[A-Z]/.test(val))      score++;
+    if (/[0-9]/.test(val))      score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { pct:'25%', color:'#f87171', text:'Fraca'   },
+      { pct:'50%', color:'#fb923c', text:'Regular' },
+      { pct:'75%', color:'#facc15', text:'Boa'     },
+      { pct:'100%',color:'#00e5a0', text:'Forte'   },
+    ];
+    const lvl = levels[score - 1] || levels[0];
+    fill.style.width      = lvl.pct;
+    fill.style.background = lvl.color;
+    label.textContent     = lvl.text;
+    label.style.color     = lvl.color;
+  }
+
+  function checkMatch() {
+    const nova    = document.getElementById('pw-nova').value;
+    const confirm = document.getElementById('pw-confirm');
+    if (confirm.value && confirm.value !== nova) {
+      confirm.style.borderColor = '#f87171';
+      confirm.style.boxShadow   = '0 0 0 3px rgba(248,113,113,0.15)';
+    } else {
+      confirm.style.borderColor = '';
+      confirm.style.boxShadow   = '';
+    }
+  }
+</script>
+
+{% endblock %}

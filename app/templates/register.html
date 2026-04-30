@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cadastro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0b0f1a;
+      --panel: #111827;
+      --border: rgba(255,255,255,0.07);
+      --accent: #00e5a0;
+      --accent2: #00b4d8;
+      --text: #f0f4f8;
+      --muted: #6b7280;
+      --error: #f87171;
+      --success: #00e5a0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -100px; left: -100px; animation-delay: 0s; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -80px; right: -80px; animation-delay: -4s; }
+    .blob-3 { width: 300px; height: 300px; background: #7c3aed; top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -8s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.08); }
+    }
+
+    .grid {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 440px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.75rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-bottom: 32px;
+    }
+
+    .flash {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+    .flash.error {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: var(--error);
+    }
+    .flash.success {
+      background: rgba(0, 229, 160, 0.08);
+      border: 1px solid rgba(0, 229, 160, 0.25);
+      color: var(--success);
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .field { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      font-size: 15px;
+    }
+
+    input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px 14px 42px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    input::placeholder { color: var(--muted); }
+    input:focus {
+      border-color: var(--accent);
+      background: rgba(0, 229, 160, 0.04);
+      box-shadow: 0 0 0 3px rgba(0, 229, 160, 0.1);
+    }
+    input.has-toggle { padding-right: 44px; }
+
+    .toggle-password {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 15px;
+      transition: color 0.2s;
+    }
+    .toggle-password:hover { color: var(--text); }
+
+    /* Password strength bar */
+    .strength-wrap {
+      margin-top: 8px;
+      display: none;
+    }
+    .strength-wrap.visible { display: block; }
+    .strength-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .strength-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+    .strength-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Terms */
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .terms input[type="checkbox"] {
+      width: 16px; height: 16px;
+      min-width: 16px;
+      padding: 0;
+      margin-top: 2px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    .terms a { color: var(--accent); text-decoration: none; }
+    .terms a:hover { opacity: 0.75; }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none;
+      border-radius: 12px;
+      color: #0b0f1a;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px rgba(0, 229, 160, 0.25);
+    }
+    button[type="submit"]:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(0, 229, 160, 0.35);
+    }
+    button[type="submit"]:active { transform: translateY(0); }
+    button[type="submit"]:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .login a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .login a:hover { opacity: 0.75; }
+  </style>
+</head>
+<body>
+
+  <div class="bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="grid"></div>
+
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">💰</div>
+      <span class="brand-name">FinanceApp</span>
+    </div>
+
+    <h1>Criar conta</h1>
+    <p class="subtitle">Comece a controlar suas finanças agora</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">
+            {{ '⚠' if category == 'error' else '✓' }} {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      {{ form.hidden_tag() if form is defined }}
+
+      <div class="field">
+        <label for="name">Nome completo</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input
+            id="name"
+            name="name"
+            type="text"
+            placeholder="Seu nome"
+            autocomplete="name"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="email">E-mail</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉</span>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="seu@email.com"
+            autocomplete="email"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Mínimo 8 caracteres"
+            autocomplete="new-password"
+            class="has-toggle"
+            oninput="checkStrength(this.value)"
+            required
+          />
+          <button type="button" class="toggle-password" onclick="togglePassword('password', this)" aria-label="Mostrar senha">👁</button>
+        </div>
+        <div class="strength-wrap" id="strengthWrap">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <span class="strength-label" id="strengthLabel"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="confirm_password">Confirmar senha</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input
+            id="confirm_password"
+            name="confirm_password"
+            type="password"
+            placeholder="Repita a senha"
+            autocomplete="new-password"
+            class="has-toggle"
+            oninput="checkMatch()"
+            required
+          />
+          <button type="button" class="toggle-password" onclick="togglePassword('confirm_password', this)" aria-label="Mostrar senha">👁</button>
+        </div>
+      </div>
+
+      <div class="terms">
+        <input type="checkbox" id="terms" name="terms" required />
+        <label for="terms" style="text-transform:none; letter-spacing:0; font-size:0.85rem; color:var(--muted);">
+          Concordo com os <a href="#">Termos de Uso</a> e a <a href="#">Política de Privacidade</a>
+        </label>
+      </div>
+
+      <button type="submit" id="submitBtn">Criar conta</button>
+    </form>
+
+    <p class="login">
+      Já tem uma conta? <a href="{{ url_for('auth.login') if url_for is defined else '#' }}">Entrar</a>
+    </p>
+  </div>
+
+  <script>
+    function togglePassword(fieldId, btn) {
+      const input = document.getElementById(fieldId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁';
+      }
+    }
+
+    function checkStrength(val) {
+      const wrap = document.getElementById('strengthWrap');
+      const fill = document.getElementById('strengthFill');
+      const label = document.getElementById('strengthLabel');
+
+      if (!val) { wrap.classList.remove('visible'); return; }
+      wrap.classList.add('visible');
+
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { pct: '25%', color: '#f87171', text: 'Fraca' },
+        { pct: '50%', color: '#fb923c', text: 'Regular' },
+        { pct: '75%', color: '#facc15', text: 'Boa' },
+        { pct: '100%', color: '#00e5a0', text: 'Forte' },
+      ];
+      const lvl = levels[score - 1] || levels[0];
+      fill.style.width = lvl.pct;
+      fill.style.background = lvl.color;
+      label.textContent = lvl.text;
+      label.style.color = lvl.color;
+    }
+
+    function checkMatch() {
+      const pw = document.getElementById('password').value;
+      const cf = document.getElementById('confirm_password');
+      if (cf.value && cf.value !== pw) {
+        cf.style.borderColor = '#f87171';
+        cf.style.boxShadow = '0 0 0 3px rgba(248,113,113,0.15)';
+      } else {
+        cf.style.borderColor = '';
+        cf.style.boxShadow = '';
+      }
+    }
+  </script>
+
+</body>
+</html>

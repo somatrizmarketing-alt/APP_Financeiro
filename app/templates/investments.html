@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}Investimentos{% endblock %}
+
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #080d18;
+    --surface: #0f1623;
+    --surface2: #161f30;
+    --surface3: #1c2840;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.1);
+    --accent: #00e5a0;
+    --accent2: #00b4d8;
+    --danger: #f87171;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --muted2: #8892a4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none; z-index: 0; opacity: 0.5;
+  }
+
+  .inv-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .inv-blob { position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.08; }
+  .inv-blob-1 { width: 550px; height: 550px; background: var(--accent2); top: -150px; right: -100px; }
+  .inv-blob-2 { width: 450px; height: 450px; background: #7c3aed; bottom: -100px; left: -80px; }
+
+  .inv-wrap {
+    position: relative; z-index: 1;
+    max-width: 1200px; margin: 0 auto;
+    padding: 40px 32px 60px;
+  }
+
+  /* ── HEADER ── */
+  .inv-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 36px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .inv-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 2rem;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text) 40%, var(--muted2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .inv-badge {
+    font-size: 0.8rem; color: var(--muted2);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 14px;
+  }
+
+  /* ── SUMMARY STRIP ── */
+  .inv-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .sum-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 22px;
+    position: relative; overflow: hidden;
+    animation: fadeUp 0.5s ease both;
+  }
+  .sum-card:nth-child(1) { animation-delay:.05s }
+  .sum-card:nth-child(2) { animation-delay:.10s }
+  .sum-card:nth-child(3) { animation-delay:.15s }
+  .sum-card:nth-child(4) { animation-delay:.20s }
+  .sum-card::before {
+    content:''; position: absolute; top:0; left:0; right:0; height:2px; border-radius:16px 16px 0 0;
+  }
+  .sum-card.s1::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .sum-card.s2::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .sum-card.s3::before { background: linear-gradient(90deg, #facc15, transparent); }
+  .sum-card.s4::before { background: linear-gradient(90deg, #7c3aed, transparent); }
+  .sum-label {
+    font-size: 0.73rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted2); margin-bottom: 10px;
+  }
+  .sum-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.45rem; letter-spacing: -0.03em;
+  }
+  .sum-card.s1 .sum-value { color: var(--accent2); }
+  .sum-card.s2 .sum-value { color: var(--accent); }
+  .sum-card.s3 .sum-value { color: #facc15; }
+  .sum-card.s4 .sum-value { color: #a78bfa; }
+
+  /* ── ADD FORM ── */
+  .add-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 26px 28px;
+    margin-bottom: 28px;
+    animation: fadeUp 0.5s ease .25s both;
+  }
+  .add-card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px; cursor: pointer; user-select: none;
+  }
+  .add-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
+  }
+  .add-toggle {
+    margin-left: auto;
+    font-size: 0.78rem; color: var(--accent);
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 8px; padding: 4px 12px;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .add-toggle:hover { opacity: .75; }
+
+  .add-form-body {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .form-field label {
+    display: block;
+    font-size: 0.73rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted2); margin-bottom: 7px;
+  }
+  .form-field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-field input::placeholder { color: var(--muted); }
+  .form-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+    background: rgba(0,229,160,0.03);
+  }
+
+  .btn-add {
+    padding: 11px 22px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px;
+    color: #080d18;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(0,229,160,0.2);
+  }
+  .btn-add:hover { opacity:.9; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(0,229,160,0.3); }
+  .btn-add:active { transform: translateY(0); }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    animation: fadeUp 0.5s ease .3s both;
+  }
+  .table-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-head-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+  }
+  .table-count {
+    font-size: 0.78rem; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 99px; padding: 3px 12px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead th {
+    font-size: 0.73rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted2);
+    padding: 13px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  thead th:last-child { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td {
+    padding: 15px 20px;
+    font-size: .88rem;
+  }
+  tbody td:last-child { text-align: right; }
+
+  .asset-cell { display: flex; align-items: center; gap: 12px; }
+  .asset-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface3); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--accent2);
+    font-family: 'Syne', sans-serif; flex-shrink: 0;
+  }
+  .asset-symbol { font-weight: 600; font-size: .9rem; color: var(--text); }
+  .asset-name   { font-size: .76rem; color: var(--muted2); margin-top: 2px; }
+
+  .profit-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+  }
+  .profit-pill.up {
+    background: rgba(0,229,160,0.1); color: var(--accent);
+    border: 1px solid rgba(0,229,160,0.2);
+  }
+  .profit-pill.down {
+    background: rgba(248,113,113,0.1); color: var(--danger);
+    border: 1px solid rgba(248,113,113,0.2);
+  }
+
+  .empty-state {
+    text-align: center; color: var(--muted);
+    font-size: .875rem; padding: 48px 0;
+  }
+  .empty-state span { display: block; font-size: 2rem; margin-bottom: 10px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 900px) {
+    .inv-summary    { grid-template-columns: repeat(2, 1fr); }
+    .add-form-body  { grid-template-columns: 1fr 1fr; }
+    .inv-wrap       { padding: 24px 16px 48px; }
+  }
+  @media (max-width: 600px) {
+    .inv-summary    { grid-template-columns: 1fr 1fr; }
+    .add-form-body  { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="inv-bg">
+  <div class="inv-blob inv-blob-1"></div>
+  <div class="inv-blob inv-blob-2"></div>
+</div>
+
+<div class="inv-wrap">
+
+  <!-- Header -->
+  <div class="inv-header">
+    <h1 class="inv-title">Investimentos</h1>
+    <span class="inv-badge" id="inv-date"></span>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="inv-summary">
+    <div class="sum-card s1">
+      <div class="sum-label">Ativos</div>
+      <div class="sum-value">{{ investments | length }}</div>
+    </div>
+    <div class="sum-card s2">
+      <div class="sum-label">Patrimônio</div>
+      <div class="sum-value">R$ {{ "%.2f"|format(investments | sum(attribute='total_value')) if investments else '0,00' }}</div>
+    </div>
+    <div class="sum-card s3">
+      <div class="sum-label">Lucro Total</div>
+      {% set total_profit = investments | sum(attribute='profit') if investments else 0 %}
+      <div class="sum-value" style="color: {{ '#00e5a0' if total_profit >= 0 else '#f87171' }}">
+        {{ '+' if total_profit >= 0 else '' }}R$ {{ "%.2f"|format(total_profit) }}
+      </div>
+    </div>
+    <div class="sum-card s4">
+      <div class="sum-label">Rentabilidade</div>
+      {% set total_invested = investments | sum(attribute='buy_price') if investments else 0 %}
+      {% set rentab = (total_profit / total_invested * 100) if total_invested > 0 else 0 %}
+      <div class="sum-value" style="color: {{ '#00e5a0' if rentab >= 0 else '#f87171' }}">
+        {{ '+' if rentab >= 0 else '' }}{{ "%.1f"|format(rentab) }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <div class="add-card">
+    <div class="add-card-header">
+      <span>➕</span>
+      <span class="add-card-title">Novo Ativo</span>
+      <span class="add-toggle">+ Adicionar</span>
+    </div>
+    <form method="POST" action="/investments/add">
+      <div class="add-form-body">
+        <div class="form-field">
+          <label>Símbolo</label>
+          <input name="symbol" placeholder="Ex: PETR4.SA, BTC-USD" required />
+        </div>
+        <div class="form-field">
+          <label>Nome</label>
+          <input name="name" placeholder="Petrobras, Bitcoin..." required />
+        </div>
+        <div class="form-field">
+          <label>Quantidade</label>
+          <input name="quantity" type="number" step="any" placeholder="0" required />
+        </div>
+        <div class="form-field">
+          <label>Preço de Compra</label>
+          <input name="buy_price" type="number" step="any" placeholder="0,00" required />
+        </div>
+        <div>
+          <button type="submit" class="btn-add">Adicionar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-head-title">Carteira</span>
+      <span class="table-count">{{ investments | length }} ativo{{ 's' if investments | length != 1 }}</span>
+    </div>
+
+    {% if investments %}
+    <table>
+      <thead>
+        <tr>
+          <th>Ativo</th>
+          <th>Quantidade</th>
+          <th>Preço Atual</th>
+          <th>Preço de Compra</th>
+          <th>Total</th>
+          <th>Lucro / Perda</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inv in investments %}
+        <tr>
+          <td>
+            <div class="asset-cell">
+              <div class="asset-icon">{{ inv.symbol[:2] | upper }}</div>
+              <div>
+                <div class="asset-symbol">{{ inv.symbol }}</div>
+                <div class="asset-name">{{ inv.name }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ inv.quantity }}</td>
+          <td>R$ {{ "%.2f"|format(inv.current_price) }}</td>
+          <td style="color: var(--muted2)">R$ {{ "%.2f"|format(inv.buy_price) }}</td>
+          <td style="font-weight:600">R$ {{ "%.2f"|format(inv.total_value) }}</td>
+          <td>
+            <span class="profit-pill {{ 'up' if inv.profit >= 0 else 'down' }}">
+              {{ '▲' if inv.profit >= 0 else '▼' }}
+              R$ {{ "%.2f"|format(inv.profit | abs) }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <span>📈</span>
+      Nenhum ativo cadastrado ainda.<br>Adicione seu primeiro investimento acima.
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('inv-date').textContent =
+    new Date().toLocaleDateString('pt-BR', { weekday:'short', day:'numeric', month:'long', year:'numeric' });
+</script>
+
+{% endblock %}

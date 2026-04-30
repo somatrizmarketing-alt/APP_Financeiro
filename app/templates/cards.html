@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Cartão{% endblock %}
+
+{% block content %}
+
+<style>
+  :root {
+    --bg: #080d18;
+    --surface: #0f1623;
+    --surface2: #161f30;
+    --surface3: #1c2840;
+    --border: rgba(255,255,255,0.06);
+    --accent: #00e5a0;
+    --accent2: #00b4d8;
+    --danger: #f87171;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --muted2: #8892a4;
+  }
+
+  .card-wrap {
+    position: relative; z-index: 1;
+    max-width: 1100px; margin: 0 auto;
+    padding: 40px 32px 60px;
+  }
+
+  .cards-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .cards-blob { position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.08; }
+  .cards-blob-1 { width: 500px; height: 500px; background: #00b4d8; top: -120px; left: 200px; }
+  .cards-blob-2 { width: 400px; height: 400px; background: #7c3aed; bottom: -80px; right: -60px; }
+
+  /* ── HEADER ── */
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 36px;
+    animation: fadeUp .5s ease both;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 2rem; letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text) 40%, var(--muted2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  /* ── VISUAL CARD ── */
+  .credit-card-visual {
+    width: 360px;
+    height: 210px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0f2847 0%, #1a3a6b 40%, #0d1f3c 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    margin-bottom: 28px;
+    animation: fadeUp .5s ease .05s both;
+    flex-shrink: 0;
+  }
+  .credit-card-visual::before {
+    content: '';
+    position: absolute;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,229,160,0.15) 0%, transparent 70%);
+    top: -80px; right: -60px;
+  }
+  .credit-card-visual::after {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,180,216,0.12) 0%, transparent 70%);
+    bottom: -60px; left: 40px;
+  }
+  .cc-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 32px; position: relative; z-index: 1;
+  }
+  .cc-chip {
+    width: 38px; height: 28px;
+    background: linear-gradient(135deg, #d4a853, #f0c96a);
+    border-radius: 6px;
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 2px; padding: 4px; overflow: hidden;
+  }
+  .cc-chip-cell { background: rgba(0,0,0,0.2); border-radius: 2px; }
+  .cc-brand {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.1rem; letter-spacing: -0.01em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .cc-number {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1.1rem; letter-spacing: .2em;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 16px; position: relative; z-index: 1;
+  }
+  .cc-bottom {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    position: relative; z-index: 1;
+  }
+  .cc-label { font-size: .62rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,0.4); margin-bottom: 3px; }
+  .cc-value { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .92rem; color: rgba(255,255,255,0.9); }
+  .cc-fatura { text-align: right; }
+  .cc-fatura .cc-value { color: var(--danger); font-size: 1.1rem; }
+
+  /* ── TOP ROW ── */
+  .top-row {
+    display: flex; gap: 24px; align-items: flex-start;
+    margin-bottom: 28px;
+  }
+  .top-right {
+    flex: 1; display: flex; flex-direction: column; gap: 14px;
+  }
+
+  /* Summary mini cards */
+  .summary-row {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  }
+  .sum-mini {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    animation: fadeUp .5s ease both;
+  }
+  .sum-mini:nth-child(1) { animation-delay: .1s; }
+  .sum-mini:nth-child(2) { animation-delay: .15s; }
+  .sum-mini:nth-child(3) { animation-delay: .2s; }
+  .sum-mini-label {
+    font-size: .7rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted2); margin-bottom: 8px;
+  }
+  .sum-mini-value {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.25rem; letter-spacing: -0.02em;
+  }
+  .sum-mini.s1 .sum-mini-value { color: var(--danger); }
+  .sum-mini.s2 .sum-mini-value { color: var(--accent2); }
+  .sum-mini.s3 .sum-mini-value { color: #a78bfa; }
+
+  /* ── FORM ── */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 26px 28px;
+    margin-bottom: 28px;
+    animation: fadeUp .5s ease .25s both;
+  }
+  .form-card-title {
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 12px; align-items: end;
+  }
+  .form-field label {
+    display: block;
+    font-size: .72rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted2); margin-bottom: 7px;
+  }
+  .form-field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: .9rem;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .form-field input::placeholder { color: var(--muted); }
+  .form-field input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+    background: rgba(0,229,160,0.03);
+  }
+  .form-field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.5); cursor: pointer; }
+
+  .btn-add {
+    padding: 11px 22px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: 10px;
+    color: #080d18;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: .88rem;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity .2s, transform .15s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(0,229,160,0.2);
+  }
+  .btn-add:hover { opacity:.9; transform:translateY(-1px); box-shadow: 0 8px 28px rgba(0,229,160,0.3); }
+  .btn-add:active { transform:translateY(0); }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px; overflow: hidden;
+    animation: fadeUp .5s ease .3s both;
+  }
+  .table-head-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-head-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem; }
+  .table-count {
+    font-size: .78rem; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 99px; padding: 3px 12px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: .72rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted2); padding: 13px 20px;
+    text-align: left; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  thead th:last-child, thead th:nth-child(3) { text-align: right; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody td { padding: 14px 20px; font-size: .88rem; }
+  tbody td:last-child, tbody td:nth-child(3) { text-align: right; }
+
+  .td-desc { font-weight: 500; color: var(--text); }
+  .td-sub  { font-size: .75rem; color: var(--muted2); margin-top: 2px; }
+
+  .installment-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: var(--surface3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 3px 10px;
+    font-size: .78rem; font-family: 'Syne', sans-serif; font-weight: 700;
+    color: var(--muted2);
+  }
+  .installment-pill b { color: var(--accent2); }
+
+  .td-value {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: .92rem; color: var(--danger);
+  }
+  .td-date { color: var(--muted2); font-size: .83rem; }
+
+  .empty-state {
+    text-align: center; color: var(--muted);
+    font-size: .875rem; padding: 56px 0;
+  }
+  .empty-state span { display: block; font-size: 2.5rem; margin-bottom: 12px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 900px) {
+    .top-row { flex-direction: column; }
+    .credit-card-visual { width: 100%; max-width: 360px; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .card-wrap { padding: 24px 16px 48px; }
+  }
+  @media (max-width: 580px) {
+    .summary-row { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="cards-bg">
+  <div class="cards-blob cards-blob-1"></div>
+  <div class="cards-blob cards-blob-2"></div>
+</div>
+
+<div class="card-wrap">
+
+  <!-- Header -->
+  <div class="card-header">
+    <h1 class="card-title">Cartão de Crédito</h1>
+  </div>
+
+  <!-- Top row: visual card + summary -->
+  <div class="top-row">
+
+    <!-- Visual credit card -->
+    <div class="credit-card-visual">
+      <div class="cc-top">
+        <div class="cc-chip">
+          <div class="cc-chip-cell"></div><div class="cc-chip-cell"></div>
+          <div class="cc-chip-cell"></div><div class="cc-chip-cell"></div>
+        </div>
+        <div class="cc-brand">FinanceApp</div>
+      </div>
+      <div class="cc-number">•••• •••• •••• 0000</div>
+      <div class="cc-bottom">
+        <div>
+          <div class="cc-label">Titular</div>
+          <div class="cc-value">{{ current_user.name if current_user is defined else 'Usuário' }}</div>
+        </div>
+        <div class="cc-fatura">
+          <div class="cc-label">Fatura atual</div>
+          <div class="cc-value">R$ {{ "%.2f"|format(total) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary + form -->
+    <div class="top-right">
+      <div class="summary-row">
+        <div class="sum-mini s1">
+          <div class="sum-mini-label">Fatura Total</div>
+          <div class="sum-mini-value">R$ {{ "%.2f"|format(total) }}</div>
+        </div>
+        <div class="sum-mini s2">
+          <div class="sum-mini-label">Compras</div>
+          <div class="sum-mini-value">{{ transactions | length }}</div>
+        </div>
+        <div class="sum-mini s3">
+          <div class="sum-mini-label">Parcelas</div>
+          <div class="sum-mini-value">{{ transactions | sum(attribute='installments') if transactions else 0 }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <div class="form-card">
+    <div class="form-card-title">💳 Nova Compra</div>
+    <form method="POST" action="{{ url_for('cards.add') }}">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Descrição</label>
+          <input name="description" placeholder="Ex: Notebook, Viagem..." required />
+        </div>
+        <div class="form-field">
+          <label>Valor Total</label>
+          <input name="total" type="number" step="any" placeholder="0,00" required />
+        </div>
+        <div class="form-field">
+          <label>Parcelas</label>
+          <input name="installments" type="number" min="1" placeholder="1" required />
+        </div>
+        <div class="form-field">
+          <label>Data</label>
+          <input type="date" name="date" required />
+        </div>
+        <div>
+          <button type="submit" class="btn-add">Adicionar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Transactions table -->
+  <div class="table-card">
+    <div class="table-head-row">
+      <span class="table-head-title">Lançamentos da Fatura</span>
+      <span class="table-count">{{ transactions | length }} item{{ 's' if transactions | length != 1 }}</span>
+    </div>
+
+    {% if transactions %}
+    <table>
+      <thead>
+        <tr>
+          <th>Descrição</th>
+          <th>Parcela</th>
+          <th>Valor</th>
+          <th>Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in transactions %}
+        <tr>
+          <td>
+            <div class="td-desc">{{ t.description }}</div>
+          </td>
+          <td>
+            <span class="installment-pill">
+              <b>{{ t.installment_number }}</b>/{{ t.installments }}
+            </span>
+          </td>
+          <td><span class="td-value">R$ {{ "%.2f"|format(t.installment_value) }}</span></td>
+          <td><span class="td-date">{{ t.purchase_date }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <span>💳</span>
+      Nenhum lançamento na fatura.<br>Adicione sua primeira compra acima.
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

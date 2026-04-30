@@ -1,0 +1,502 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #080d18;
+    --surface: #0f1623;
+    --surface2: #161f30;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.1);
+    --accent: #00e5a0;
+    --accent2: #00b4d8;
+    --danger: #f87171;
+    --warning: #fb923c;
+    --text: #e8edf5;
+    --muted: #5a6478;
+    --muted2: #8892a4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* ── AMBIENT BLOBS ── */
+  .dash-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .dash-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.09;
+  }
+  .dash-blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -100px; }
+  .dash-blob-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; left: -100px; }
+
+  /* ── LAYOUT ── */
+  .dash-wrap {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 40px 32px 60px;
+  }
+
+  /* ── HEADER ── */
+  .dash-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .dash-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, var(--text) 40%, var(--muted2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .dash-date {
+    font-size: 0.82rem;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+  }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 18px 18px 0 0;
+  }
+  .kpi-card.income::before  { background: linear-gradient(90deg, var(--accent), transparent); }
+  .kpi-card.expense::before { background: linear-gradient(90deg, var(--danger), transparent); }
+  .kpi-card.balance::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+
+  .kpi-card:nth-child(1) { animation-delay: 0.05s; }
+  .kpi-card:nth-child(2) { animation-delay: 0.10s; }
+  .kpi-card:nth-child(3) { animation-delay: 0.15s; }
+
+  .kpi-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted2);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .kpi-label .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .kpi-card.income  .dot { background: var(--accent); }
+  .kpi-card.expense .dot { background: var(--danger); }
+  .kpi-card.balance .dot { background: var(--accent2); }
+
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .kpi-card.income  .kpi-value { color: var(--accent); }
+  .kpi-card.expense .kpi-value { color: var(--danger); }
+  .kpi-card.balance .kpi-value { color: var(--accent2); }
+
+  .kpi-sub {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ── CHARTS SECTION ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .chart-card:nth-child(1) { animation-delay: 0.2s; }
+  .chart-card:nth-child(2) { animation-delay: 0.25s; }
+
+  .chart-label {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .chart-label span {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+  #categoryChart { max-height: 240px; }
+  #monthlyChart  { max-height: 240px; }
+
+  /* ── TRANSACTIONS ── */
+  .tx-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px 28px;
+    animation: fadeUp 0.5s ease 0.3s both;
+  }
+
+  .tx-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .tx-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .tx-link {
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+  .tx-link:hover { opacity: 1; }
+
+  .tx-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .tx-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    transition: background 0.15s;
+    cursor: default;
+  }
+  .tx-item:hover { background: var(--surface2); }
+
+  .tx-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-desc {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tx-cat {
+    font-size: 0.75rem;
+    color: var(--muted2);
+    margin-top: 2px;
+  }
+
+  .tx-amount {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .tx-amount.positive { color: var(--accent); }
+  .tx-amount.negative { color: var(--danger); }
+
+  /* empty state */
+  .tx-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.875rem;
+    padding: 32px 0;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .charts-grid { grid-template-columns: 1fr; }
+    .kpi-grid    { grid-template-columns: 1fr; }
+    .dash-wrap   { padding: 24px 16px 48px; }
+  }
+</style>
+
+<!-- Ambient background -->
+<div class="dash-bg">
+  <div class="dash-blob dash-blob-1"></div>
+  <div class="dash-blob dash-blob-2"></div>
+</div>
+
+<div class="dash-wrap">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <h1 class="dash-title">Dashboard</h1>
+    <span class="dash-date" id="dash-date"></span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card income">
+      <div class="kpi-label"><span class="dot"></span> Receitas</div>
+      <div class="kpi-value">R$ {{ "%.2f"|format(income) }}</div>
+      <div class="kpi-sub">Total do período</div>
+    </div>
+    <div class="kpi-card expense">
+      <div class="kpi-label"><span class="dot"></span> Despesas</div>
+      <div class="kpi-value">R$ {{ "%.2f"|format(expenses) }}</div>
+      <div class="kpi-sub">Total do período</div>
+    </div>
+    <div class="kpi-card balance">
+      <div class="kpi-label"><span class="dot"></span> Saldo</div>
+      <div class="kpi-value">R$ {{ "%.2f"|format(balance) }}</div>
+      <div class="kpi-sub">Receitas − Despesas</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-label">Por Categoria <span>Pizza</span></div>
+      <div class="chart-wrap">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Evolução Mensal <span>Linha</span></div>
+      <div class="chart-wrap">
+        <canvas id="monthlyChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions -->
+  <div class="tx-card">
+    <div class="tx-header">
+      <span class="tx-title">Últimas Transações</span>
+      <a href="#" class="tx-link">Ver todas →</a>
+    </div>
+
+    {% if transactions %}
+    <ul class="tx-list">
+      {% for t in transactions %}
+      <li class="tx-item">
+        <div class="tx-icon">
+          {% if t.type == 'income' %}💰
+          {% elif t.category == 'food' or t.category == 'alimentação' %}🍔
+          {% elif t.category == 'transport' or t.category == 'transporte' %}🚗
+          {% elif t.category == 'health' or t.category == 'saúde' %}💊
+          {% elif t.category == 'entertainment' or t.category == 'lazer' %}🎬
+          {% else %}📌
+          {% endif %}
+        </div>
+        <div class="tx-info">
+          <div class="tx-desc">{{ t.description }}</div>
+          <div class="tx-cat">{{ t.category }}</div>
+        </div>
+        <div class="tx-amount {{ 'positive' if t.type == 'income' else 'negative' }}">
+          {{ '+' if t.type == 'income' else '−' }} R$ {{ "%.2f"|format(t.amount) }}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="tx-empty">Nenhuma transação ainda.</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Chart data -->
+<script id="chart-data" type="application/json">
+{
+    "labels": {{ labels | tojson }},
+    "values": {{ values | tojson }},
+    "months": {{ months | tojson }},
+    "totals": {{ totals | tojson }}
+}
+</script>
+
+<script>
+(function () {
+  // Date
+  const d = new Date();
+  document.getElementById('dash-date').textContent =
+    d.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const data = JSON.parse(document.getElementById('chart-data').textContent);
+
+  const palette = ['#00e5a0','#00b4d8','#7c3aed','#fb923c','#f87171','#facc15','#34d399','#60a5fa'];
+
+  // Pie chart
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        data: data.values,
+        backgroundColor: palette,
+        borderColor: '#0f1623',
+        borderWidth: 3,
+        hoverOffset: 8
+      }]
+    },
+    options: {
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: '#8892a4',
+            font: { family: 'DM Sans', size: 11 },
+            boxWidth: 10,
+            padding: 14
+          }
+        }
+      }
+    }
+  });
+
+  // Line chart
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'line',
+    data: {
+      labels: data.months,
+      datasets: [{
+        label: 'Total',
+        data: data.totals,
+        borderColor: '#00e5a0',
+        backgroundColor: 'rgba(0,229,160,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#00e5a0',
+        pointBorderColor: '#0f1623',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#5a6478', font: { family: 'DM Sans', size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#5a6478',
+            font: { family: 'DM Sans', size: 11 },
+            callback: v => 'R$ ' + v.toLocaleString('pt-BR')
+          }
+        }
+      }
+    }
+  });
+})();
+</script>
+
+{% endblock %}
