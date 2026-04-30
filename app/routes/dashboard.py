@@ -3,8 +3,6 @@ from flask_login import login_required, current_user
 from app.models import Transaction
 from app import db
 from sqlalchemy import func
-from datetime import datetime
-
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -12,6 +10,7 @@ dashboard = Blueprint('dashboard', __name__)
 @login_required
 def home():
     transactions = Transaction.query.filter_by(user_id=current_user.id).all()
+
     # KPIs
     income = sum(t.amount for t in transactions if t.type == 'income')
     expenses = sum(t.amount for t in transactions if t.type == 'expense')
@@ -21,16 +20,26 @@ def home():
     category_data = db.session.query(
         Transaction.category,
         func.sum(Transaction.amount)
-    ).filter_by(user_id=current_user.id).group_by(Transaction.category).all()
+    ).filter_by(
+        user_id=current_user.id
+    ).group_by(
+        Transaction.category
+    ).all()
 
     labels = [c[0] for c in category_data]
     values = [float(c[1]) for c in category_data]
 
-    # EVOLUÇÃO MENSAL
+    # EVOLUÇÃO MENSAL (compatível com PostgreSQL)
     monthly_data = db.session.query(
-        func.strftime('%Y-%m', Transaction.date),
+        func.to_char(Transaction.date, 'YYYY-MM'),
         func.sum(Transaction.amount)
-    ).filter_by(user_id=current_user.id).group_by(func.strftime('%Y-%m', Transaction.date)).all()
+    ).filter_by(
+        user_id=current_user.id
+    ).group_by(
+        func.to_char(Transaction.date, 'YYYY-MM')
+    ).order_by(
+        func.to_char(Transaction.date, 'YYYY-MM')
+    ).all()
 
     months = [m[0] for m in monthly_data]
     totals = [float(m[1]) for m in monthly_data]
@@ -44,7 +53,7 @@ def home():
         values=values,
         months=months,
         totals=totals,
-        transactions=transactions[-5:]  # últimos 5
+        transactions=transactions[-5:]
     )
 
 
